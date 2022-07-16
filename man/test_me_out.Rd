@@ -10,10 +10,10 @@ test_me_out(x)
 \item{x}{The input object}
 }
 \value{
-A character string of gross "humor."
+A character string.
 }
 \description{
-Run the main function in this package. Best funtion ever. Butts.
+A test function made while working out package and github setup.
 }
 \examples{
 test_me_out(1)

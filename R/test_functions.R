@@ -1,11 +1,9 @@
-
-
 #' Test Me Out
-#' @description Run the main function in this package. Best funtion ever. Butts.
+#' @description A test function made while working out package and github setup.
 #'
 #' @param x The input object
 #'
-#' @return A character string of gross "humor."
+#' @return A character string.
 #' @export
 #'
 #' @examples
@@ -13,8 +11,8 @@
 #' test_me_out("Yes")
 test_me_out <- function(x){
   if(x == "Yes"){
-    return("Butt")
+    return("Yayyyyyyy")
   } else {
-    return("Poop")
+    return("Nooooooooooo")
   }
 }
