@@ -248,8 +248,8 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
     }else{
       # Data are indv-level; target is indv-level 
       if(!doing.CV) print('data=indv; target=indv')
-      DY1 <- c(ltmle:::HouseholdIC(as.matrix(DY1), id = Vdata$id))
-      DY0 <- c(ltmle:::HouseholdIC(as.matrix(DY0), id = Vdata$id))
+      DY1 <- c(aggregate_IC(as.matrix(DY1), id = Vdata$id))
+      DY0 <- c(aggregate_IC(as.matrix(DY0), id = Vdata$id))
     }
     
     # for the pair-matched IC also need to aggregate to the cluster-level
@@ -306,34 +306,23 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 
 
 
-#-----------------------------------------------------#-----------------------------------------------------
-# get.inference: function to calculate two-sided confidence intervals
-#     & test the null hypothesis with a one-sided test
-#	input: 
-#		goal (aRR= arithmetic risk ratio; otherwise RD)
-#   psi (true value)
-#   psi.hat (estimate)
-#   se (standard error)
-#		df (degrees of freedom if using a Student's t-dist ) 
-#		sig.level (significance level)
-#   one.sided (if one-sided test)
-# output: 
-#		variance, test statistic, confidence intervals, pval, indicator reject null
 # 		note: if goal=aRR, variance & test stat are on log-scale
-#-----------------------------------------------------#-----------------------------------------------------	
 
-#' Inference on relative or absolute scale
+#' Calculate confidence intervals and p-values on relative or absolute scale
 #'
 #' @param goal String specifying the scale of the target parameter. Default is
 #'   'RD', risk/rate difference. Any other values assume that input values are
 #'   given on the log scale, and the function will exponentiate the estimated
-#'   target parameter and confidence interval bounds to output a risk/rate
-#'   ratio.
+#'   target parameter and confidence interval bounds to output an artihmetic
+#'   risk/rate ratio.
 #' @param psi True value (if known) of the target parameter, for example, in a
 #'   simulation study.
 #' @param psi.hat Estimated value of the target parameter.
 #' @param se Standard error of the estimated target parameter.
-#' @param df Degrees of freedom (number of independent units - 2).
+#' @param df Degrees of freedom (number of independent units - 2) for the
+#'   Student's $t$ distribution as an approximation of the asymptotic normal
+#'   distribution. If \code{df > 40}, the value is ignored and a normal
+#'   distribution is used for inference.
 #' @param sig.level Desired significance (alpha) level. Defaults to 0.05.
 #' @param one.sided Logical indicating that a one-sided test is desired.
 #'   Defaults to \code{FALSE}.
@@ -348,13 +337,14 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 #'   (\code{est}), the (two-sided) confidence interval \code{CI.lo},
 #'   \code{CI/hi}, the standard error of the estimate, the (possibly one-sided)
 #'   p-value, and bias/coverage/rejection indicators (if true value or target
-#'   parameter is supplied).
+#'   parameter is supplied). NOTE: If \code{goal != 'RD"}, the output standard
+#'   error will be on the log scale.
 #' @export
 get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level = 0.05, 
                           one.sided = F, alt.smaller = NULL){
   
-  
-  # test statistic (on the log-transformed scale if goal= aRR or OR )
+  # test statistic
+  # (on the log-transformed scale if goal is arithmetic RR or odds ratio)
   tstat <- psi.hat/se
   
   if(df > 40){
@@ -390,11 +380,11 @@ get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level
   
   # bias
   bias <- (psi.hat - psi)
-  # confidence interval coverage
+  # confidence interval coverage?
   cover <-  CI.lo <= psi & psi <= CI.hi
-  # reject the null
+  # reject the null?
   reject <- as.numeric(pval < sig.level)
-  return(data.frame(est=psi.hat, CI.lo, CI.hi, se=se, pval, bias, cover, reject))
+  return(data.frame(est = psi.hat, CI.lo, CI.hi, se = se, pval, bias, cover, reject))
 }
 
 
