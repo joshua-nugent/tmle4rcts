@@ -2,7 +2,7 @@
 % Please edit documentation in R/stage2_functions.R
 \name{get.IC.variance}
 \alias{get.IC.variance}
-\title{Title}
+\title{Calculate the variance of the influence curve}
 \usage{
 get.IC.variance(
   goal,
@@ -17,24 +17,24 @@ get.IC.variance(
 )
 }
 \arguments{
-\item{goal}{}
+\item{goal}{aRR= arithmetic risk ratio; RD for the risk difference; OR for
+the odds ratio}
 
-\item{target}{}
+\item{target}{target of inference: cluster-level ("clust") or pooled-indv
+effect ("indv") (target)}
 
-\item{Vdata}{}
+\item{Vdata}{data set}
 
-\item{R1}{}
+\item{scale_value}{maximum value for outcome scaling}
 
-\item{R0}{}
-
-\item{sample.effect}{}
-
-\item{scale_value}{}
-
-\item{scale_value_min}{}
+\item{scale_value_min}{minimum value for outcome scaling}
 
 \item{doing.CV}{}
 }
+\value{
+on log scale for if goal='aRR' or 'OR' ... estimated IC & variance -
+preserving/breaking the match
+}
 \description{
-Title
+UPDATE OF UNSCALING HAPPENS HERE
 }

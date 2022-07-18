@@ -59,7 +59,6 @@
 
 #-------------------
 # REQUIRES
-# dummy column U=1
 
 # if pair-matched and want to keep pairs, the column indicating pairs must be labeled as "pair"
 
@@ -79,19 +78,26 @@
 #   
 #-------------------
 
-Stage2 <- function(goal='aRR', target='indv', data.input, 
-                   QAdj=NULL, Qform='glm', gAdj=NULL, gform='glm',
-                   do.data.adapt =F, 
+Stage2 <- function(goal='aRR', target = 'indv', data.input, 
+                   QAdj=NULL, Qform = 'glm', gAdj=NULL, gform='glm',
+                   do.data.adapt = F, 
                    cand.QAdj=NULL, cand.Qform='glm', cand.gAdj=NULL, cand.gform='glm',
                    V=5, remove.pscore=F, do.cv.variance=F,
                    break.match=T, one.sided=T, alt.smaller=NULL, verbose=F, psi=NA,
-                   return.IC=F){	
+                   return.IC=F){
+  
+  if("U" %nin% colnames(data.input)){ # Will now add dummy column "U" if not in dataset
+    data.input <- data.input %>% mutate(U = 1)
+  }
+  if("Y" %nin% colnames((data.input))){
+    stop("No Y column in data.input")
+  }
   
   # if doing a one-sided test, need to specify the alternative
   # alt.smaller = T if intervention reduces mean outcome
   # alt.smaller = F if intervention increases mean outcome
   if(one.sided & is.null(alt.smaller)){
-    print('*****ERROR: For one-sided test, need to specify the direction of the hypo')
+    stop('For one-sided test, need to specify the direction of the alternative hypothesis')
   }
   
   #=====================================================
@@ -99,13 +105,11 @@ Stage2 <- function(goal='aRR', target='indv', data.input,
   # no impact on outcomes already bounded in [0,1]
   if(max(data.input[,'Y']) > 1){
     scale_value <- max(data.input[,'Y'])
-    # print(paste0('max Y: ', scale_value))
   } else {
     scale_value <- 1
   }
   if(min(data.input[,'Y']) < 0){
     scale_value_min <- min(data.input[,'Y'])
-   #  print(paste0('min Y: ', scale_value))
   } else {
     scale_value_min <- 0
   }
@@ -162,11 +166,11 @@ Stage2 <- function(goal='aRR', target='indv', data.input,
   } else if (goal=='RD'){
     psi.hat <- R1- R0
   } else if (goal=='OR'){
-    psi.hat <- log( R1/(1-R1)*(1-R0)/R0)
+    psi.hat <- log( R1/(1-R1) * (1-R0)/R0 )
   }
   
   if(break.match){
-    # if breaking the match, set df to (#clusters -2)
+    # if breaking the match, set df to (#clusters - 2)
     df <- n.clust - 2
     var.hat <- est$var.break
   } else{
@@ -201,34 +205,24 @@ Stage2 <- function(goal='aRR', target='indv', data.input,
   RETURN
 }
 
-#-----------------------------------------------------#-----------------------------------------------------
-# get.IC.variance - function to do influence curve-based variance estimate 
-# input: 
-#		goal (aRR= arithmetic risk ratio; RD for the risk difference; OR for the odds ratio)
-#   target of inference: cluster-level ("clust") or pooled-indv effect ("indv") (target) 
-#		dataset (Vdata)
-#   maximum value for outcome scaling (scale_value),
-#   minimum value for outcome scaling (scale_value_min)
-#
-# update: unscaling of ICs happens here! 
-#
-# output: 
-#   on log scale for if goal='aRR' or 'OR'
-#		estimated IC & variance - preserving/breaking the match
-#-----------------------------------------------------#-----------------------------------------------------
-#' Title
+#' Calculate the variance of the influence curve
 #'
-#' @param goal 
-#' @param target 
-#' @param Vdata 
-#' @param R1 
-#' @param R0 
-#' @param sample.effect 
-#' @param scale_value 
-#' @param scale_value_min 
-#' @param doing.CV 
+#' UPDATE OF UNSCALING HAPPENS HERE
 #'
-#' @return
+#' @param goal aRR= arithmetic risk ratio; RD for the risk difference; OR for
+#'   the odds ratio
+#' @param target target of inference: cluster-level ("clust") or pooled-indv
+#'   effect ("indv") (target)
+#' @param Vdata data set
+#' @param R1
+#' @param R0
+#' @param sample.effect
+#' @param scale_value maximum value for outcome scaling
+#' @param scale_value_min minimum value for outcome scaling
+#' @param doing.CV
+#'
+#' @return on log scale for if goal='aRR' or 'OR' ... estimated IC & variance -
+#'   preserving/breaking the match
 #' @export
 #'
 #' @examples
@@ -333,10 +327,9 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 #'   simulation study.
 #' @param psi.hat Estimated value of the target parameter.
 #' @param se Standard error of the estimated target parameter.
-#' @param df Degrees of freedom (number of independent units - 2) for the
-#'   Student's \emph{t} distribution as an approximation of the asymptotic
-#'   normal distribution. If \code{df > 40}, the value is ignored and a normal
-#'   distribution is used for inference.
+#' @param df Degrees of freedom for the Student's \emph{t} distribution as an
+#'   approximation of the asymptotic normal distribution. If \code{df > 40}, the
+#'   value is ignored and a normal distribution is used for inference.
 #' @param sig.level Desired significance (alpha) level. Defaults to 0.05.
 #' @param one.sided Logical indicating that a one-sided test is desired.
 #'   Defaults to \code{FALSE}.

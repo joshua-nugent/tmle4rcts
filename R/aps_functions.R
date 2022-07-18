@@ -34,8 +34,6 @@ do.adaptive.prespec<- function(goal, target='indv', break.match=T, Ldata, V=5,
                                cand.QAdj, cand.Qform, cand.gAdj, cand.gform, remove.pscore=F,
                                QAdj=NULL, gAdj=NULL, scale_value, scale_value_min, verbose=F){
   
-  
-  
   # UPDATE: GET THE FOLDS HERE! 
   # get the indpt units (will be observation in indv RCT)
   if( !break.match ){

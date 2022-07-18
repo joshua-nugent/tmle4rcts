@@ -60,6 +60,9 @@ library(tmle4rcts)
 ?test_me_out
 ?get.inference
 
+
 ################ OR...
 # skip it and just install freshest version
-#install()
+install()
+dat <- cbind.data.frame(A = 1, U = 2)
+Stage2(data.input = dat)

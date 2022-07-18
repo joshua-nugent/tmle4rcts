@@ -29,10 +29,9 @@ simulation study.}
 
 \item{se}{Standard error of the estimated target parameter.}
 
-\item{df}{Degrees of freedom (number of independent units - 2) for the
-Student's \emph{t} distribution as an approximation of the asymptotic
-normal distribution. If \code{df > 40}, the value is ignored and a normal
-distribution is used for inference.}
+\item{df}{Degrees of freedom for the Student's \emph{t} distribution as an
+approximation of the asymptotic normal distribution. If \code{df > 40}, the
+value is ignored and a normal distribution is used for inference.}
 
 \item{sig.level}{Desired significance (alpha) level. Defaults to 0.05.}
 
