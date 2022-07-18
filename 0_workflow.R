@@ -1,4 +1,5 @@
 library(devtools)
+library(tidyverse)
 
 check() # then...
 # commit and push to github

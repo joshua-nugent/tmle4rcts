@@ -216,6 +216,22 @@ Stage2 <- function(goal='aRR', target='indv', data.input,
 #   on log scale for if goal='aRR' or 'OR'
 #		estimated IC & variance - preserving/breaking the match
 #-----------------------------------------------------#-----------------------------------------------------
+#' Title
+#'
+#' @param goal 
+#' @param target 
+#' @param Vdata 
+#' @param R1 
+#' @param R0 
+#' @param sample.effect 
+#' @param scale_value 
+#' @param scale_value_min 
+#' @param doing.CV 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,  
                             scale_value = 1, scale_value_min = 0, doing.CV=F){
   
@@ -306,22 +322,20 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 
 
 
-# 		note: if goal=aRR, variance & test stat are on log-scale
-
 #' Calculate confidence intervals and p-values on relative or absolute scale
 #'
 #' @param goal String specifying the scale of the target parameter. Default is
-#'   'RD', risk/rate difference. Any other values assume that input values are
-#'   given on the log scale, and the function will exponentiate the estimated
-#'   target parameter and confidence interval bounds to output an artihmetic
-#'   risk/rate ratio.
+#'   \code{RD}, risk/rate difference. Any other values assume that input values
+#'   are given on the log scale, and the function will exponentiate the
+#'   estimated target parameter and confidence interval bounds to output an
+#'   artihmetic risk/rate ratio.
 #' @param psi True value (if known) of the target parameter, for example, in a
 #'   simulation study.
 #' @param psi.hat Estimated value of the target parameter.
 #' @param se Standard error of the estimated target parameter.
 #' @param df Degrees of freedom (number of independent units - 2) for the
-#'   Student's $t$ distribution as an approximation of the asymptotic normal
-#'   distribution. If \code{df > 40}, the value is ignored and a normal
+#'   Student's \emph{t} distribution as an approximation of the asymptotic
+#'   normal distribution. If \code{df > 40}, the value is ignored and a normal
 #'   distribution is used for inference.
 #' @param sig.level Desired significance (alpha) level. Defaults to 0.05.
 #' @param one.sided Logical indicating that a one-sided test is desired.
@@ -337,9 +351,11 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 #'   (\code{est}), the (two-sided) confidence interval \code{CI.lo},
 #'   \code{CI/hi}, the standard error of the estimate, the (possibly one-sided)
 #'   p-value, and bias/coverage/rejection indicators (if true value or target
-#'   parameter is supplied). NOTE: If \code{goal != 'RD"}, the output standard
+#'   parameter is supplied). NOTE: If \code{goal != "RD"}, the output standard
 #'   error will be on the log scale.
 #' @export
+#'
+#' @examples
 get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level = 0.05, 
                           one.sided = F, alt.smaller = NULL){
   
