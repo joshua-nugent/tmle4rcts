@@ -291,9 +291,9 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 
   
   # estimated variance for txt specific means or if break the match	
-  var.R1 <- var(DY1) /J
-  var.R0 <- var(DY0) / J
-  var.break <- var(DY) /J
+  var.R1 <- stats::var(DY1) /J
+  var.R0 <- stats::var(DY0) / J
+  var.break <- stats::var(DY) /J
   
   if( 'pair' %in% colnames(Vdata) ){
     # estimated variance if preserve the match
@@ -306,7 +306,7 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
       DY.paired[i]<- 0.5*sum(DY[ these] )			
     }
     
-    var.pair <- var(DY.paired) / n.pairs
+    var.pair <- stats::var(DY.paired) / n.pairs
   } else{
     DY.paired <- var.pair <- NA
   }
@@ -361,26 +361,26 @@ get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level
   
   # test statistic
   # (on the log-transformed scale if goal is arithmetic RR or odds ratio)
-  tstat <- psi.hat/se
+  tstat <- psi.hat / se
   
   if(df > 40){
     # assume normal distribution
-    cutoff <- qnorm(sig.level/2, lower.tail=F)
+    cutoff <- stats::qnorm(sig.level/2, lower.tail=F)
     # one.sided hypothesis test 
     if(one.sided){
-      pval<- pnorm(tstat, lower.tail=alt.smaller) 
+      pval <- stats::pnorm(tstat, lower.tail=alt.smaller) 
     } else{
-      pval<- 2*pnorm(abs(tstat), lower.tail=F) 
+      pval<- 2*stats::pnorm(abs(tstat), lower.tail=F) 
     }
   } else {
     # use Student's t-distribution
     # print('Using t-distribution')
-    cutoff <- qt(sig.level/2, df=df, lower.tail=F)
+    cutoff <- stats::qt(sig.level/2, df=df, lower.tail=F)
     # one.sided hypothesis test if specified
     if(one.sided){
-      pval <- pt(tstat, df=df, lower.tail= alt.smaller ) 
+      pval <- stats::pt(tstat, df=df, lower.tail= alt.smaller ) 
     } else{
-      pval <- 2*pt(abs(tstat), df=df, lower.tail=F)
+      pval <- 2*stats::pt(abs(tstat), df=df, lower.tail=F)
     }
   }
   # 95% confidence interval 

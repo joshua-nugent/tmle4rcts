@@ -6,7 +6,7 @@ mean.harmonic <- function(a){
 
 aggregate_IC <- function(recordIC, id) {
   if (is.null(id)) return(recordIC)
-  aggregatedIC <- as.matrix(aggregate(recordIC, list(id=id), sum)[, -1, drop = FALSE])
+  aggregatedIC <- as.matrix(stats::aggregate(recordIC, list(id=id), sum)[, -1, drop = FALSE])
   num.records <- nrow(recordIC)
   num.clusters <- nrow(aggregatedIC)
   aggregatedIC <- aggregatedIC * num.clusters / num.records

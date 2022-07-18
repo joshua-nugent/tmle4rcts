@@ -249,7 +249,7 @@ get.IC.CV<- function(goal, target, break.match, Ldata, QAdj, Qform, gAdj=NULL, g
   CV.risk <- mean(CV.risk)
   
   # estimating the CV variance for that TMLE
-  var.CV <- var(DY.CV)/length(DY.CV)
+  var.CV <- stats::var(DY.CV)/length(DY.CV)
   
   list(CV.risk=CV.risk, var.CV=var.CV)
   
