@@ -1,0 +1,18 @@
+
+Changes from "Meta" code shared on July 12. Hopefully I don't miss anything. -Josh
+
+
+Monday 7/18
+ - Changed Stage2() default to be two-sided test
+ - Added a lot of explicit return() statements for clarity
+ - Updated est.df code in Stage2() to return the candidate adjustment variables used instead of their index numbers
+
+
+Friday 7/15:
+ - Changed the R script names to be simpler, more general
+ - Copied ltmle::HouseholdIC function, renamed it aggregate_IC
+ - Created utility_functions.R for shared helper functions
+ - Put %nin%, mean.harmonic, aggregage_IC, get.inference into utility_functions.R
+ - Stage2() adds a "U" column if one is not included in data.input
+ - Moved the code that checks that the alternative hypothesis direction is specified if a one-sided p-value is desired into the start of Stage2() rather than in get.inference to speed up the production of errors.
+ - Added Stage2() check for a "Y" column

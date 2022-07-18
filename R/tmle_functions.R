@@ -259,33 +259,28 @@ get.epsilon <- function(train, goal, verbose=F){
   Skip.update <-  mean(Y.train[A.train==1])==0 | mean(Y.train[A.train==0])==0 |  
     mean(Y.train[A.train==1])==1 | mean(Y.train[A.train==0])==1 
   
-  if(goal=='RD'){
-    
-    # if going after RD, then use a 1-dim clever covariate
+  if(goal=='RD'){ # if going after RD, then use a 1-dim clever covariate
     if(!Skip.update){
       logitUpdate<- suppressWarnings( 
         glm(Y.train ~ -1 +offset(qlogis(train$QbarAW )) + train$H.AW, family="binomial",  weights=train$alpha))
       eps<-logitUpdate$coef
-    } else{
-      eps<- 0
+    } else {
+      eps <- 0
     }
     names(eps) <- 'H.AW'
-    
-  }else{
-    # targeting the risk or odds ratio requires a two-dimensional clever covariate
-    
+  } else { # targeting the risk or odds ratio requires a two-dimensional clever covariate
     if( !Skip.update  ){
       logitUpdate<- suppressWarnings(
         glm(Y.train ~ -1 +offset(qlogis(train$QbarAW )) + train$H.0W + train$H.1W, family="binomial", weights=train$alpha))
-      eps<-logitUpdate$coef
-    } else{
+      eps <- logitUpdate$coef
+    } else {
       eps <- c(0,0)
     }
     names(eps)<- c('H.0W', 'H.1W')	
   }
   if(verbose) print(eps)
   
-  eps
+  return(eps)
 }
 
 #-----------------------------------------------------#-----------------------------------------------------
@@ -297,23 +292,21 @@ get.epsilon <- function(train, goal, verbose=F){
 
 do.targeting <- function(train, eps, goal){
   
-  g1W<- train$pscore
-  g0W<- (1 - g1W)
+  g1W <- train$pscore
+  g0W <- (1 - g1W)
   
   if(goal=='RD'){
-    
     # updated QbarAW estimates for training set. 
     QbarAW.star <- plogis( qlogis(train$QbarAW ) + eps*train$H.AW)	
     Qbar1W.star <- plogis( qlogis(train$Qbar1W ) + eps/g1W )
     Qbar0W.star <- plogis( qlogis(train$Qbar0W ) - eps/g0W )
-    
-  }else{
+  } else {
     # updated QbarAW estimates for training set. 
     QbarAW.star <- plogis( qlogis(train$QbarAW) + eps['H.0W']*train$H.0W + eps['H.1W']*train$H.1W)	
     Qbar0W.star <- plogis( qlogis(train$Qbar0W) + eps['H.0W']/g0W )
     Qbar1W.star <- plogis( qlogis(train$Qbar1W) + eps['H.1W']/g1W )
   }
   train <- data.frame(train, QbarAW.star, Qbar1W.star, Qbar0W.star)		
-  train
+  return(train)
 }
 

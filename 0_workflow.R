@@ -67,6 +67,10 @@ library(tidyverse)
 ################ OR...
 # skip it and just install freshest version
 install()
-dat <- cbind.data.frame(simulate_clustered_data() %>% select(-U))
-Stage2(data.input = dat, one.sided = F)
+dat <- simulate_clustered_data()
+Stage2(data.input = dat, goal = "RD", psi = dat$unit_mean_diff[1],
+       do.data.adapt = T, verbose = F,
+       cand.Qform = c("step", "glm", "lasso","mars"),
+       cand.gform = c("mars", "glm", "lasso", "step"),
+       cand.QAdj = c("covar0", "covar1"), cand.gAdj = c("covar0", "covar1"))
 head(dat)

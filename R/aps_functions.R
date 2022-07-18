@@ -30,9 +30,12 @@
 # remove.pscore: if T, remove the variable(s) selected for adjustment in the outcome regression from 
 #   candidates for the pscore... should only be used if doing adaptive prespec in RCT with few indpt units
 
-do.adaptive.prespec<- function(goal, target='indv', break.match=T, Ldata, V=5,
-                               cand.QAdj, cand.Qform, cand.gAdj, cand.gform, remove.pscore=F,
-                               QAdj=NULL, gAdj=NULL, scale_value, scale_value_min, verbose=F){
+do.adaptive.prespec <- function(goal, target='indv', break.match=T, Ldata, V=5,
+                                cand.QAdj, cand.Qform,
+                                cand.gAdj, cand.gform,
+                                remove.pscore = F,
+                                QAdj = NULL, gAdj = NULL,
+                                scale_value, scale_value_min, verbose = F){
   
   # UPDATE: GET THE FOLDS HERE! 
   # get the indpt units (will be observation in indv RCT)
@@ -63,6 +66,8 @@ do.adaptive.prespec<- function(goal, target='indv', break.match=T, Ldata, V=5,
     # if(verbose) print(cand.Qform)
     
     # do adaptive pre-specification to select from candidate approaches for Qbar
+    print("running CV.selector for CAND.FORM = ")
+    print(cand.Qform)
     select.Q <- suppressWarnings( CV.selector(goal=goal, target=target, break.match=break.match, Ldata=Ldata,
                                               CAND.ADJ=cand.QAdj, CAND.FORM=cand.Qform, forQ=T, 
                                               scale_value=scale_value, scale_value_min=scale_value_min,
@@ -76,7 +81,7 @@ do.adaptive.prespec<- function(goal, target='indv', break.match=T, Ldata, V=5,
     
     # if select unadjusted estimator for QbarAW=E(Y|A,W), then stop
     if( sum(QAdj == 'U') ){ 
-      g.index<- -99; gAdj <- 'U'; gform <- 'glm'
+      g.index <- -99; gAdj <- 'U'; gform <- 'glm'
       var.CV <- select.Q$var.CV
     } 
     
@@ -99,12 +104,14 @@ do.adaptive.prespec<- function(goal, target='indv', break.match=T, Ldata, V=5,
   if( is.null(gAdj) ){ 		
    # if(verbose) print(cand.gform)
     
-    select.G <- suppressWarnings( CV.selector(goal=goal, target=target, break.match=break.match, Ldata=Ldata,
-                                              CAND.ADJ=cand.gAdj, CAND.FORM=cand.gform, forQ=F, 
+    select.G <- suppressWarnings( CV.selector(goal = goal, target = target,
+                                              break.match = break.match, Ldata = Ldata,
+                                              CAND.ADJ = cand.gAdj, CAND.FORM = cand.gform,
+                                              forQ = F, 
                                               # input selected variables/form of the outcome regression
-                                              QAdj= QAdj, Qform=Qform,
-                                              scale_value=scale_value, scale_value_min=scale_value_min,
-                                              folds=folds) )
+                                              QAdj = QAdj, Qform = Qform,
+                                              scale_value = scale_value, scale_value_min = scale_value_min,
+                                              folds = folds) )
     
     if(verbose) print(select.G)
     g.index <- select.G$adj.index
@@ -112,9 +119,11 @@ do.adaptive.prespec<- function(goal, target='indv', break.match=T, Ldata, V=5,
     gform <- select.G$form
     var.CV <- select.G$var.CV		
   }		
-  
-  list(Q.index=Q.index, QAdj=QAdj, Qform=Qform, 
-       g.index=g.index, gAdj=gAdj, gform=gform, var.CV=var.CV )
+  output_aps <- list(Q.index = Q.index, QAdj = QAdj, Qform = Qform, 
+                     g.index = g.index, gAdj = gAdj, gform = gform,
+                     var.CV = var.CV)
+  #if(verbose) print(output_aps)
+  return(output_aps)
 }
 
 
@@ -139,48 +148,51 @@ CV.selector <- function(goal, target, break.match, Ldata, CAND.ADJ, CAND.FORM,
                         forQ, QAdj=NULL, Qform=NULL,
                         scale_value, scale_value_min, folds){
   
-  if( length(CAND.FORM)==1 ){
+  if( length(CAND.FORM) == 1 ){
     # if exploring only one estimation algorithm (usually GLM)
     # then need to replicate the number forms
     CAND.FORM <- rep(CAND.FORM, length(CAND.ADJ))
   }
   
-  if( length(CAND.FORM) != length(CAND.ADJ)){
+  if(length(CAND.FORM) != length(CAND.ADJ)){
     print('******* PROBLEM- MISMATCH SIZE OF ADJ VAR AND QFORM')
   }
-  
-  
   # Number of candidate estimators is given by length Qform//gform
   num.tmles <- length(CAND.FORM)
-  CV.risk <-  var.CV <-  rep(NA, num.tmles)
+  CV.risk <- var.CV <- rep(NA, num.tmles)
 
   for(k in 1: num.tmles){	
     
     if(forQ){
+      print("Q:")
+      print(CAND.ADJ[[k]])
+      print(CAND.FORM[k])
       # if selecting the adjustment approach for the outcome regression
-      IC.temp<- get.IC.CV(goal=goal, target=target, break.match=break.match, Ldata=Ldata,
-                          QAdj=CAND.ADJ[[k]], Qform=CAND.FORM[k], gAdj=NULL, gform='glm',
-                          scale_value=scale_value, scale_value_min=scale_value_min, 
-                          folds=folds)
-    } else{
+      IC.temp <- get.IC.CV(goal = goal, target = target, break.match = break.match, Ldata = Ldata,
+                           QAdj = CAND.ADJ[[k]], Qform = CAND.FORM[k],
+                           gAdj = NULL, gform = 'glm',
+                           scale_value = scale_value, scale_value_min = scale_value_min, 
+                           folds = folds)
+    } else {
+      print("g:")
+      print(CAND.ADJ[[k]])
+      print(CAND.FORM[k])
       # if collaboratively selecting the adjustment approach for the pscore
-      IC.temp<- get.IC.CV(goal=goal, target=target, break.match=break.match, Ldata=Ldata, 
-                          QAdj=QAdj, Qform=Qform, 
-                          gAdj= CAND.ADJ[[k]], gform=CAND.FORM[k],
-                          scale_value=scale_value, scale_value_min=scale_value_min, 
-                          folds=folds)
+      IC.temp <- get.IC.CV(goal=goal, target=target, break.match=break.match, Ldata=Ldata, 
+                           QAdj=QAdj, Qform=Qform, 
+                           gAdj= CAND.ADJ[[k]], gform=CAND.FORM[k],
+                           scale_value=scale_value, scale_value_min=scale_value_min, 
+                           folds=folds)
     }
-    
     # estimating the CV risk for each candidate
     CV.risk[k]<- IC.temp$CV.risk
     # estimating the CV variance for that TMLE
     var.CV[k] <- IC.temp$var.CV
-    
   }
   # select the candidate estimator resulting in the smallest CV-risk
   adj.index<- which.min(CV.risk)
   list(CV.risk=CV.risk, adj.index=adj.index, 
-       Adj=CAND.ADJ[[adj.index]], form=CAND.FORM[adj.index], var.CV=var.CV[adj.index])
+       Adj = CAND.ADJ[[adj.index]], form = CAND.FORM[adj.index], var.CV = var.CV[adj.index])
 }
 
 #-----------------------------------------------------#-----------------------------------------------------
@@ -361,7 +373,7 @@ get.folds <- function(V, Y, ids, stratify=T){
       folds[[v]] <- c(ids.Y1[ids.Y1.split[[v]]], ids.noY1[ids.noY1.split[[v]]])
     }
     
-  }else{
+  } else {
     # dont stratify on the outcome
     ids.split <- split(sample(length(ids)), rep(1:V, length=length(ids)))
     folds <- vector("list", V)

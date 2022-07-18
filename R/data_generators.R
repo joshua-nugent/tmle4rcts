@@ -2,8 +2,8 @@
 
 
 
-simulate_clustered_data <- function(treatment_arm_cluster_size = 5, treatment_arm_clusters = 15,
-                                    control_arm_cluster_size = 1, control_arm_clusters = 15,
+simulate_clustered_data <- function(treatment_arm_cluster_size = 15, treatment_arm_clusters = 50,
+                                    control_arm_cluster_size = 1, control_arm_clusters = 50,
                                     txt_eff = .5, ranef_sd = 1, covar1_coef = 1, seed = NA,
                                     informative_cluster_size = F){
   if(!is.na(seed)){ set.seed(seed) }

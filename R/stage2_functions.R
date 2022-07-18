@@ -1,12 +1,4 @@
-##############
-# Stage2_Functions.R 
-# R code to implement all Stage2 analyses to compare intervention effects between arms
-# Using TMLE with and without Adaptive Prespecification 
-
 # Modified from Stage2_Functions.R in https://github.com/LauraBalzer/TwoStageTMLE
-
-# With edits from Josh Nugent (https://github.com/joshua-nugent):
-#   to code 1-sided p-values & rescale outcomes to be bounded in [0,1]
 
 #---------------------------------------
 # Stage2: Main function for estimation and inference 
@@ -78,18 +70,20 @@
 #   
 #-------------------
 
-Stage2 <- function(goal='aRR', target = 'indv', data.input, 
-                   QAdj=NULL, Qform = 'glm', gAdj=NULL, gform='glm',
+Stage2 <- function(goal = 'aRR', target = 'indv', data.input, 
+                   QAdj = NULL, Qform = 'glm',
+                   gAdj = NULL, gform = 'glm',
                    do.data.adapt = F, 
-                   cand.QAdj=NULL, cand.Qform='glm', cand.gAdj=NULL, cand.gform='glm',
-                   V=5, remove.pscore=F, do.cv.variance=F,
-                   break.match=T, one.sided=T, alt.smaller=NULL, verbose=F, psi=NA,
-                   return.IC=F){
+                   cand.QAdj = NULL, cand.Qform = 'glm',
+                   cand.gAdj = NULL, cand.gform = 'glm',
+                   V = 5, remove.pscore = F, do.cv.variance = F,
+                   break.match = T, one.sided = F, alt.smaller = NULL, verbose = F, psi = NA,
+                   return.IC = F){
   
   if("U" %nin% colnames(data.input)){ # Will now add dummy column "U" if not in dataset
-    data.input <- data.input %>% mutate(U = 1)
+    data.input <- data.input %>% dplyr::mutate(U = 1)
   }
-  if("Y" %nin% colnames((data.input))){
+  if("Y" %nin% colnames(data.input)){
     stop("No Y column in data.input")
   }
   
@@ -119,14 +113,14 @@ Stage2 <- function(goal='aRR', target = 'indv', data.input,
   # ADAPTIVE PRESPECIFICATION
   # update: flexibility in CV-scheme and candidate prediction algorithms
   if(do.data.adapt){
-    select <- do.adaptive.prespec(goal=goal, target=target, break.match = break.match, 
-                                  Ldata= data.input, V=V,
-                                  cand.QAdj=cand.QAdj, cand.Qform=cand.Qform,
-                                  cand.gAdj=cand.gAdj, cand.gform=cand.gform,
-                                  remove.pscore=remove.pscore,
-                                  QAdj=QAdj, gAdj=gAdj,
+    select <- do.adaptive.prespec(goal = goal, target = target, break.match = break.match, 
+                                  Ldata = data.input, V = V,
+                                  cand.QAdj = cand.QAdj, cand.Qform = cand.Qform,
+                                  cand.gAdj = cand.gAdj, cand.gform = cand.gform,
+                                  remove.pscore = remove.pscore,
+                                  QAdj = QAdj, gAdj = gAdj,
                                   scale_value = scale_value, scale_value_min = scale_value_min,
-                                  verbose=verbose)
+                                  verbose = verbose)
     
     Q.index <- select$Q.index
     QAdj <- select$QAdj
@@ -134,8 +128,8 @@ Stage2 <- function(goal='aRR', target = 'indv', data.input,
     g.index <- select$g.index
     gAdj <- select$gAdj	
     gform <- select$gform
-    
-  } else{
+    #if(verbose){print(paste(QAdj, gAdj))}
+  } else {
     QAdj <- gAdj <- 'U'
     Q.index <- g.index <- 1
   }
@@ -143,28 +137,28 @@ Stage2 <- function(goal='aRR', target = 'indv', data.input,
   # RUN FULL TMLE WITH ADJUSTMENT SET 
   # update: runs all code for point estimation on scaled outcome
   # update: need to pass in min/max values for outcome scaling for variance estimation 
-  est <- do.TMLE(goal=goal, target=target, train=data.input, QAdj=QAdj, Qform=Qform, 
-                 gAdj=gAdj, gform=gform, scale_value = scale_value, scale_value_min = scale_value_min,
-                 doing.CV=F, verbose=verbose)  
+  est <- do.TMLE(goal = goal, target = target, train =  data.input,
+                 QAdj = QAdj, Qform = Qform, 
+                 gAdj = gAdj, gform = gform,
+                 scale_value = scale_value, scale_value_min = scale_value_min,
+                 doing.CV = F, verbose = verbose)  
                  
-  # GET INFERENCE 
+  ############################## GET INFERENCE 
   n.clust <- length(unique(data.input$id)) 
-
   # Get point estimates of the treatment-specific mean
   R1 <- est$R1
   R0 <- est$R0
-  
   # Note: this only gives standard (not cross-validated) inference
   Txt <- get.inference(psi.hat = R1, se = sqrt(est$var.R1), df = (n.clust-2))[, c('est','CI.lo','CI.hi','se')]
   Con <- get.inference(psi.hat = R0, se = sqrt(est$var.R0), df = (n.clust-2))[, c('est','CI.lo','CI.hi','se')]
   
   # Now: for the intervention effect 
   #  the point estimate on the relevant scale for getting inference
-  if(goal=='aRR') {
+  if(goal == 'aRR') {
     psi.hat <- log(R1/R0)
-  } else if (goal=='RD'){
+  } else if (goal == 'RD'){
     psi.hat <- R1- R0
-  } else if (goal=='OR'){
+  } else if (goal == 'OR'){
     psi.hat <- log( R1/(1-R1) * (1-R0)/R0 )
   }
   
@@ -178,23 +172,28 @@ Stage2 <- function(goal='aRR', target = 'indv', data.input,
     var.hat <- est$var.pair
   }
   
-  inference <- get.inference(goal=goal, psi=psi, psi.hat=psi.hat, se=sqrt(var.hat), df=df,
-                             one.sided=one.sided, alt.smaller = alt.smaller)
+  inference <- get.inference(goal = goal, psi=psi, psi.hat = psi.hat,
+                             se = sqrt(var.hat), df = df,
+                             one.sided = one.sided, alt.smaller = alt.smaller)
 
   if(do.cv.variance){
     # if getting cross-validated inference
-    inference.CV <- get.inference(goal=goal, psi=psi, psi.hat=psi.hat, se=sqrt(select$var.CV), df=df,
+    inference.CV <- get.inference(goal=goal, psi=psi, psi.hat=psi.hat,
+                                  se=sqrt(select$var.CV), df=df,
                                   one.sided=one.sided, alt.smaller = alt.smaller)
     
-    est.df<-  data.frame(Txt=Txt, Con=Con, psi=psi, inference, CV=inference.CV, 
-                         QAdj=Q.index, Qform=est$Qform, 
-                         gAdj=g.index, gform=est$gform)
-  } else{
-    est.df <-  data.frame(Txt=Txt, Con=Con, psi=psi, inference, 
-                          QAdj=Q.index, Qform=est$Qform, 
-                          gAdj=g.index, gform=est$gform)
+    est.df <- data.frame(Txt=Txt, Con=Con, psi=psi, inference, CV=inference.CV, 
+                         #QAdj = Q.index,
+                         QAdj = QAdj, Qform=est$Qform, 
+                         #gAdj = g.index,
+                         gAdj = gAdj, gform=est$gform)
+  } else {
+    est.df <- data.frame(Txt = Txt, Con = Con, psi = psi, inference, 
+                         #QAdj = Q.index,
+                         QAdj = QAdj, Qform=est$Qform, 
+                         #gAdj = g.index,
+                         gAdj = gAdj, gform=est$gform)
   }
-  
 
   if(return.IC){
     Stage2_output <- list(IC=est, est.df=est.df)
@@ -303,97 +302,17 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
   } else{
     DY.paired <- var.pair <- NA
   }
-
   
-  
-  list(R1=R1, R0=R0, DY1=DY1, var.R1=var.R1, DY0=DY0, var.R0=var.R0, 
+  return(list(R1=R1, R0=R0, DY1=DY1, var.R1=var.R1, DY0=DY0, var.R0=var.R0, 
        DY=DY, var.break=var.break, 
-       DY.paired=DY.paired, var.pair=var.pair)
+       DY.paired=DY.paired, var.pair=var.pair))
 }
 
 
 
 
 
-#' Calculate confidence intervals and p-values on relative or absolute scale
-#'
-#' @param goal String specifying the scale of the target parameter. Default is
-#'   \code{RD}, risk/rate difference. Any other values assume that input values
-#'   are given on the log scale, and the function will exponentiate the
-#'   estimated target parameter and confidence interval bounds to output an
-#'   artihmetic risk/rate ratio.
-#' @param psi True value (if known) of the target parameter, for example, in a
-#'   simulation study.
-#' @param psi.hat Estimated value of the target parameter.
-#' @param se Standard error of the estimated target parameter.
-#' @param df Degrees of freedom for the Student's \emph{t} distribution as an
-#'   approximation of the asymptotic normal distribution. If \code{df > 40}, the
-#'   value is ignored and a normal distribution is used for inference.
-#' @param sig.level Desired significance (alpha) level. Defaults to 0.05.
-#' @param one.sided Logical indicating that a one-sided test is desired.
-#'   Defaults to \code{FALSE}.
-#' @param alt.smaller If one-sided test is desired, is the alternative
-#'   hypothesis that the intervention arm will have a smaller value that the
-#'   control arm? For example, if you expect a public health intervention to
-#'   reduce the mean of a disease outcome, use alt.smaller = TRUE (this
-#'   corresponds to a null hypothesis that the intervention did not reduce the
-#'   mean disease outcome).
-#'   
-#' @return A one-row data frome with the estimated target parameter value
-#'   (\code{est}), the (two-sided) confidence interval \code{CI.lo},
-#'   \code{CI/hi}, the standard error of the estimate, the (possibly one-sided)
-#'   p-value, and bias/coverage/rejection indicators (if true value or target
-#'   parameter is supplied). NOTE: If \code{goal != "RD"}, the output standard
-#'   error will be on the log scale.
-#' @export
-#'
-#' @examples
-get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level = 0.05, 
-                          one.sided = F, alt.smaller = NULL){
-  
-  # test statistic
-  # (on the log-transformed scale if goal is arithmetic RR or odds ratio)
-  tstat <- psi.hat / se
-  
-  if(df > 40){
-    # assume normal distribution
-    cutoff <- stats::qnorm(sig.level/2, lower.tail=F)
-    # one.sided hypothesis test 
-    if(one.sided){
-      pval <- stats::pnorm(tstat, lower.tail=alt.smaller) 
-    } else{
-      pval<- 2*stats::pnorm(abs(tstat), lower.tail=F) 
-    }
-  } else {
-    # use Student's t-distribution
-    # print('Using t-distribution')
-    cutoff <- stats::qt(sig.level/2, df=df, lower.tail=F)
-    # one.sided hypothesis test if specified
-    if(one.sided){
-      pval <- stats::pt(tstat, df=df, lower.tail= alt.smaller ) 
-    } else{
-      pval <- 2*stats::pt(abs(tstat), df=df, lower.tail=F)
-    }
-  }
-  # 95% confidence interval 
-  CI.lo <- (psi.hat - cutoff*se)
-  CI.hi <- (psi.hat + cutoff*se)
-  
-  # If on relative (log) scale, transform back 
-  if(goal != 'RD'){
-    psi.hat <- exp(psi.hat)
-    CI.lo <- exp(CI.lo)
-    CI.hi <- exp(CI.hi)
-  }  
-  
-  # bias
-  bias <- (psi.hat - psi)
-  # confidence interval coverage?
-  cover <-  CI.lo <= psi & psi <= CI.hi
-  # reject the null?
-  reject <- as.numeric(pval < sig.level)
-  return(data.frame(est = psi.hat, CI.lo, CI.hi, se = se, pval, bias, cover, reject))
-}
+
 
 
 
