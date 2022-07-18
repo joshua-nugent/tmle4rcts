@@ -87,6 +87,13 @@ Stage2 <- function(goal='aRR', target='indv', data.input,
                    break.match=T, one.sided=T, alt.smaller=NULL, verbose=F, psi=NA,
                    return.IC=F){	
   
+  # if doing a one-sided test, need to specify the alternative
+  # alt.smaller = T if intervention reduces mean outcome
+  # alt.smaller = F if intervention increases mean outcome
+  if(one.sided & is.null(alt.smaller)){
+    print('*****ERROR: For one-sided test, need to specify the direction of the hypo')
+  }
+  
   #=====================================================
   # update: TRANSFORM the outcome as in Chpt7 of TLB 
   # no impact on outcomes already bounded in [0,1]
@@ -145,12 +152,12 @@ Stage2 <- function(goal='aRR', target='indv', data.input,
   R0 <- est$R0
   
   # Note: this only gives standard (not cross-validated) inference
-  Txt <- get.inference(psi.hat=R1, se=sqrt(est$var.R1), df=(n.clust-2))[,c('est','CI.lo','CI.hi','se')]
-  Con <- get.inference(psi.hat=R0, se=sqrt(est$var.R0), df=(n.clust-2))[,c('est','CI.lo','CI.hi','se')]
+  Txt <- get.inference(psi.hat = R1, se = sqrt(est$var.R1), df = (n.clust-2))[, c('est','CI.lo','CI.hi','se')]
+  Con <- get.inference(psi.hat = R0, se = sqrt(est$var.R0), df = (n.clust-2))[, c('est','CI.lo','CI.hi','se')]
   
   # Now: for the intervention effect 
   #  the point estimate on the relevant scale for getting inference
-  if( goal=='aRR' ){
+  if(goal=='aRR') {
     psi.hat <- log(R1/R0)
   } else if (goal=='RD'){
     psi.hat <- R1- R0
@@ -318,7 +325,10 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 #' Inference on relative or absolute scale
 #'
 #' @param goal String specifying the scale of the target parameter. Default is
-#'   'RD', risk/rate difference. Any other values will give risk/rate ratio.
+#'   'RD', risk/rate difference. Any other values assume that input values are
+#'   given on the log scale, and the function will exponentiate the estimated
+#'   target parameter and confidence interval bounds to output a risk/rate
+#'   ratio.
 #' @param psi True value (if known) of the target parameter, for example, in a
 #'   simulation study.
 #' @param psi.hat Estimated value of the target parameter.
@@ -327,25 +337,22 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 #' @param sig.level Desired significance (alpha) level. Defaults to 0.05.
 #' @param one.sided Logical indicating that a one-sided test is desired.
 #'   Defaults to \code{FALSE}.
-#' @param alt.smaller If one-sided test is desired, ...
-#'
+#' @param alt.smaller If one-sided test is desired, is the alternative
+#'   hypothesis that the intervention arm will have a smaller value that the
+#'   control arm? For example, if you expect a public health intervention to
+#'   reduce the mean of a disease outcome, use alt.smaller = TRUE (this
+#'   corresponds to a null hypothesis that the intervention did not reduce the
+#'   mean disease outcome).
+#'   
 #' @return A one-row data frome with the estimated target parameter value
 #'   (\code{est}), the (two-sided) confidence interval \code{CI.lo},
 #'   \code{CI/hi}, the standard error of the estimate, the (possibly one-sided)
 #'   p-value, and bias/coverage/rejection indicators (if true value or target
 #'   parameter is supplied).
 #' @export
-#'
-#' @examples
 get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level = 0.05, 
                           one.sided = F, alt.smaller = NULL){
   
-  # if doing a one-sided test, need to specify the alternative
-  # alt.smaller=T if intervention reduces mean outcome
-  # alt.smaller=F if intervention increases mean outcome
-  if(one.sided & is.null(alt.smaller)){
-    print('*****ERROR: For one-sided test, need to specify the direction of the hypo')
-  }
   
   # test statistic (on the log-transformed scale if goal= aRR or OR )
   tstat <- psi.hat/se
@@ -363,14 +370,13 @@ get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level
     # use Student's t-distribution
     # print('Using t-distribution')
     cutoff <- qt(sig.level/2, df=df, lower.tail=F)
-    # one.sided hypothesis test 
+    # one.sided hypothesis test if specified
     if(one.sided){
       pval <- pt(tstat, df=df, lower.tail= alt.smaller ) 
     } else{
       pval <- 2*pt(abs(tstat), df=df, lower.tail=F)
     }
   }
-  
   # 95% confidence interval 
   CI.lo <- (psi.hat - cutoff*se)
   CI.hi <- (psi.hat + cutoff*se)

@@ -57,6 +57,7 @@ library(devtools)
 devtools::install_github(repo = "https://github.com/joshua-nugent/tmle4rcts")
 library(tmle4rcts)
 ?test_me_out
+?get.inference
 
 ################ OR...
 # skip it and just install freshest version
