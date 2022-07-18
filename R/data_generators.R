@@ -40,7 +40,7 @@ simulate_clustered_data <- function(treatment_arm_cluster_size = 5, treatment_ar
   Y <- ifelse(A == 1, Y1, Y0)
   dat <- cbind.data.frame(unit_id, cluster_id, A,
                           UY, covar0, covar1, UE,
-                          txt_eff, Y0, Y1, Y, U = 1,
+                          txt_eff, Y0, Y1, Y,
                           N_j = N_j) %>% mutate(id = cluster_id, alpha = 1, U = 1)
   cluster_means <- dat %>% group_by(cluster_id, A) %>% summarise(cluster_mean0 = mean(Y0),
                                                                  cluster_mean1 = mean(Y1),

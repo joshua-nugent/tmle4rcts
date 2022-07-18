@@ -57,12 +57,16 @@ check()
 library(devtools)
 devtools::install_github(repo = "https://github.com/joshua-nugent/tmle4rcts")
 library(tmle4rcts)
+library(tidyverse)
 ?test_me_out
 ?get.inference
+?get.IC.variance
+
 
 
 ################ OR...
 # skip it and just install freshest version
 install()
-dat <- cbind.data.frame(A = 1, U = 2)
-Stage2(data.input = dat)
+dat <- cbind.data.frame(simulate_clustered_data() %>% select(-U))
+Stage2(data.input = dat, one.sided = F)
+head(dat)

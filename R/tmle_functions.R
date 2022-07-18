@@ -1,8 +1,5 @@
 ##############
-# TMLE_Functions_BigRCTs.R 
 # R code to obtain point estimates with TMLE
-
-# Modified from Stage2_Functions.R in https://github.com/LauraBalzer/TwoStageTMLE
 
 #-----------------------------------------------------#-----------------------------------------------------
 # do.TMLE: master function to run TMLE for point estimation 
@@ -186,13 +183,13 @@ do.Init.Qbar<- function(train, QAdj, Qform='glm', glm.out=NULL, verbose=F){
 #-----------------------------------------------------#-----------------------------------------------------
 get.clever.cov<- function(train, gAdj, gform, p.out=NULL, verbose=F){
   
-  if( is.null(gAdj) ){
+  if(is.null(gAdj)){
     gAdj <- 'U'
   }
   
   train.temp <- train[, c(gAdj, 'A')]  
   # needed for penalized regression
-  Xl <- model.matrix(~-1 +. , subset(train.temp, select=-A) )
+  Xl <- model.matrix( ~ -1 + ., subset(train.temp, select=-A) )
   
   if( is.null(p.out) ){ # fit pscore on training set 	
     # run main terms regression
@@ -224,7 +221,7 @@ get.clever.cov<- function(train, gAdj, gform, p.out=NULL, verbose=F){
   # now use p.out to get estimated pscores
   if(gform!='lasso'){
     pscore <- predict(p.out, newdata= train.temp,  type="response")
-  }else{
+  } else {
     pscore <- predict(p.out, newx=Xl, type='response', s = min(p.out$lambda) )
   }
   

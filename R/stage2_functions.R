@@ -147,7 +147,6 @@ Stage2 <- function(goal='aRR', target = 'indv', data.input,
                  gAdj=gAdj, gform=gform, scale_value = scale_value, scale_value_min = scale_value_min,
                  doing.CV=F, verbose=verbose)  
                  
-  
   # GET INFERENCE 
   n.clust <- length(unique(data.input$id)) 
 
@@ -198,11 +197,11 @@ Stage2 <- function(goal='aRR', target = 'indv', data.input,
   
 
   if(return.IC){
-    RETURN <- list(IC=est, est.df=est.df)
+    Stage2_output <- list(IC=est, est.df=est.df)
   } else{
-    RETURN <- est.df
+    Stage2_output <- est.df
   }
-  RETURN
+  return(Stage2_output)
 }
 
 #' Calculate the variance of the influence curve
