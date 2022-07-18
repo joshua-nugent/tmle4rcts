@@ -315,8 +315,30 @@ get.IC.variance <- function(goal, target, Vdata, R1=NA, R0=NA, sample.effect=T,
 # 		note: if goal=aRR, variance & test stat are on log-scale
 #-----------------------------------------------------#-----------------------------------------------------	
 
-get.inference <- function(goal='RD', psi=NA, psi.hat, se, df=99, sig.level=0.05, 
-                          one.sided=F, alt.smaller=NULL){
+#' Inference on relative or absolute scale
+#'
+#' @param goal String specifying the scale of the target parameter. Default is
+#'   'RD', risk/rate difference. Any other values will give risk/rate ratio.
+#' @param psi True value (if known) of the target parameter, for example, in a
+#'   simulation study.
+#' @param psi.hat Estimated value of the target parameter.
+#' @param se Standard error of the estimated target parameter.
+#' @param df Degrees of freedom (number of independent units - 2).
+#' @param sig.level Desired significance (alpha) level. Defaults to 0.05.
+#' @param one.sided Logical indicating that a one-sided test is desired.
+#'   Defaults to \code{FALSE}.
+#' @param alt.smaller If one-sided test is desired, ...
+#'
+#' @return A one-row data frome with the estimated target parameter value
+#'   (\code{est}), the (two-sided) confidence interval \code{CI.lo},
+#'   \code{CI/hi}, the standard error of the estimate, the (possibly one-sided)
+#'   p-value, and bias/coverage/rejection indicators (if true value or target
+#'   parameter is supplied).
+#' @export
+#'
+#' @examples
+get.inference <- function(goal = 'RD', psi = NA, psi.hat, se, df = 99, sig.level = 0.05, 
+                          one.sided = F, alt.smaller = NULL){
   
   # if doing a one-sided test, need to specify the alternative
   # alt.smaller=T if intervention reduces mean outcome
@@ -328,7 +350,7 @@ get.inference <- function(goal='RD', psi=NA, psi.hat, se, df=99, sig.level=0.05,
   # test statistic (on the log-transformed scale if goal= aRR or OR )
   tstat <- psi.hat/se
   
-  if(df>40){
+  if(df > 40){
     # assume normal distribution
     cutoff <- qnorm(sig.level/2, lower.tail=F)
     # one.sided hypothesis test 
@@ -337,7 +359,7 @@ get.inference <- function(goal='RD', psi=NA, psi.hat, se, df=99, sig.level=0.05,
     } else{
       pval<- 2*pnorm(abs(tstat), lower.tail=F) 
     }
-  }else{
+  } else {
     # use Student's t-distribution
     # print('Using t-distribution')
     cutoff <- qt(sig.level/2, df=df, lower.tail=F)
@@ -349,29 +371,24 @@ get.inference <- function(goal='RD', psi=NA, psi.hat, se, df=99, sig.level=0.05,
     }
   }
   
-
-
   # 95% confidence interval 
   CI.lo <- (psi.hat - cutoff*se)
   CI.hi <- (psi.hat + cutoff*se)
   
-  # transform back 
-  if(goal!='RD'){
-    psi.hat<- exp(psi.hat)
+  # If on relative (log) scale, transform back 
+  if(goal != 'RD'){
+    psi.hat <- exp(psi.hat)
     CI.lo <- exp(CI.lo)
     CI.hi <- exp(CI.hi)
   }  
   
   # bias
   bias <- (psi.hat - psi)
-  
   # confidence interval coverage
-  cover<- ( CI.lo <= psi & psi <= CI.hi )
+  cover <-  CI.lo <= psi & psi <= CI.hi
   # reject the null
-  reject <- as.numeric( pval < sig.level  )
-  
-  data.frame(est=psi.hat,  CI.lo, CI.hi, se=se,  pval, bias, cover, reject)
-  
+  reject <- as.numeric(pval < sig.level)
+  return(data.frame(est=psi.hat, CI.lo, CI.hi, se=se, pval, bias, cover, reject))
 }
 
 

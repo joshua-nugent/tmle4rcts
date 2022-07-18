@@ -49,7 +49,7 @@ devtools::document()
 use_package_doc()
 check()
 
-# commit and push to GH again
+################################################################## commit and push to GH again
 
 
 ##### TRY INSTALLING FROM GITHUB
@@ -60,4 +60,4 @@ library(tmle4rcts)
 
 ################ OR...
 # skip it and just install freshest version
-install()
+#install()
